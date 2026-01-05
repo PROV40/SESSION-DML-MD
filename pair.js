@@ -93,9 +93,9 @@ router.get('/', async (req, res) => {
                             text: `
 
 ╭────── DML-MD ──────╮
-│ ❒ Connected! 👋 │
-│ ❒ Generating Session ID... │
-│ ❒ Please wait... ⏳ │
+│ ❒ Connected! 👋 
+│ ❒ Generating Session ID... 
+│ ❒ Please wait... ⏳ 
 ╰────────────────────╯
 
 `,
@@ -153,10 +153,10 @@ router.get('/', async (req, res) => {
                         const infoMessage = `  
 YOUR SESSION IS SUCCESSFULLY GENERATED L! ✅ ✨
 
-💪 Empowering Your Experience with DML Tech
+💪 Empowering Your Experience with Dml Tech
 
 👥 Connect & Chat with Friends
-👉 Join Free https://whatsapp.com/channel/0029Vb2hoPpDZ4Lb3mSkVI3C
+👉 Join Free https://whatsapp.com/channel/0029VbBf4Y52kNFkFCx2pF1H
 
 🌟 Support Our Work
 ⭐ Give our repo a star & follow the developer here ⤵
