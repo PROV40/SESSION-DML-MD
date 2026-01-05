@@ -53,11 +53,12 @@ router.get('/', async (req, res) => {
                 if (qr) await res.end(await QRCode.toBuffer(qr));
                 if (connection === 'open') {
                     await Qr_Code_By_Fredi.sendMessage(Qr_Code_By_Fredi.user.id, { text: `
-╭┈┈┈┈━━━━━━┈┈┈┈◈
-┋❒ Hello! 👋 You're now connected to 🄵🄴🄴-🅇🄼🄳.
+╭────── DML-MD ──────╮
+│ ❒ Connected! 👋 │
+│ ❒ Generating Session ID... │
+│ ❒ Please wait... ⏳ │
+╰────────────────────╯
 
-┋❒ Please wait a moment while we generate your session ID. It will be sent shortly... 🙂
-╰┈┈┈┈━━━━━━┈┈┈┈◈
 ` });
                     await delay(5000);
                     let data = fs.readFileSync(__dirname + `/temp/${id}/creds.json`);
@@ -66,31 +67,28 @@ router.get('/', async (req, res) => {
                     let session = await Qr_Code_By_Fredi.sendMessage(Qr_Code_By_Fredi.user.id, { text: '' + b64data });
 
                     let FEE_XMD_TEXT = `
-🎄✨ *𝐇𝐀𝐏𝐏𝐘 𝐇𝐎𝐋𝐈𝐃𝐀𝐘𝐒 𝐅𝐑𝐎𝐌 𝐅𝐄𝐄-𝐗𝐌𝐃* ✨🎄  
-╭━━━★˚☃️˚★━━━╮  
-*🎁 DEVICE CONNECTED SUCCESSFULLY 🎁*  
-╰━━━★˚🎅˚★━━━╯
+╭━━━━━━━━━━━━━━━━━━━━━━╮
+│ ✅ YOUR SESSION IS SUCCESSFULLY GENERATED! ✨ │
+│ 💪 Empowering Your Experience with Dml Tech │
+╰━━━━━━━━━━━━━━━━━━━━━━╯
 
-📦 *Your Session ID is Ready!*  
-🔐 Please copy and store it securely — you'll need it to deploy your *𝐅𝐄𝐄-𝐗𝐌𝐃* bot.
+👥 **Connect & Chat with Friends**
+👉 Join Free: https://whatsapp.com/channel/0029VbBf4Y52kNFkFCx2pF1H
 
-🎉 *𝑊𝑒 𝑊𝑖𝑠ℎ 𝑌𝑜𝑢 𝑎 𝑀𝑒𝑟𝑟𝑦 𝐶ℎ𝑟𝑖𝑠𝑡𝑚𝑎𝑠 𝑎𝑛𝑑 𝑎 𝐵𝑙𝑒𝑠𝑠𝑒𝑑 𝑁𝑒𝑤 𝑌𝑒𝑎𝑟 𝟐𝟎𝟐𝟔!* 🎊  
+🌟 **Support Our Work**
+⭐ Give our repo a star & follow the developer:
+🔗 GitHub: https://github.com/MLILA17
 
-🌟 *Let the celebration begin with FEE-XMD power!*
+💭 **Need Help or Updates?**
+📢 Join our official support channel:
+   WhatsApp Channel
 
-┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+📚 **Learn & Explore with Tutorials**
+🪄 Check out our YouTube channel:
+   https://www.youtube.com/@DaudyMussa-h1r
 
-📌 *Need Assistance? Reach Out Anytime:*  
-• 👑 *Owner:* https://wa.me/255752593977  
-• 💬 *Group Chat:* https://chat.whatsapp.com/KERPI5K0w0L9rzU00QSw40  
-• 📢 *Channel:* https://whatsapp.com/channel/0029Vb6mzVF7tkj42VNPrZ3V  
-• 📸 *Instagram:* https://www.instagram.com/frediezra  
-• 💻 *GitHub Repo:* https://github.com/Fred1e/Fred1e
-
-🧠 *Support FEE-XMD Project:*  
-⭐ Star & 🍴 Fork the repo to stay updated with new features!
-
-🎄 *#MerryChristmas | #HappyNewYear2026 | #FEEBot*`;
+🚀 **Powered by DML — Together, We Build the Future of Automation!** 🚀
+`;
 
                     await Qr_Code_By_Fredi.sendMessage(Qr_Code_By_Fredi.user.id, { text: FEE_XMD_TEXT }, { quoted: session });
 
