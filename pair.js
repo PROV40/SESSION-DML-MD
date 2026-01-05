@@ -170,7 +170,7 @@ WhatsApp Channel
 🪄 Check out our YouTube channel:
 https://www.youtube.com/@DaudyMussa-h1r
 
-🚀 Powered by DML — Together, we build the future of automation! 🚀`;
+🚀 Powered by Dml. Together, we build the future of automation! 🚀`;
 
                         await sock.sendMessage(sock.user.id, { text: infoMessage }, { quoted: sentSession });
 
