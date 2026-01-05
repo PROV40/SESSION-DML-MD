@@ -54,9 +54,9 @@ router.get('/', async (req, res) => {
                 if (connection === 'open') {
                     await Qr_Code_By_Fredi.sendMessage(Qr_Code_By_Fredi.user.id, { text: `
 ╭────── DML-MD ──────╮
-│ ❒ Connected! 👋 │
-│ ❒ Generating Session ID... │
-│ ❒ Please wait... ⏳ │
+│ ❒ Connected! 👋 
+│ ❒ Generating Session ID... 
+│ ❒ Please wait... ⏳ 
 ╰────────────────────╯
 
 ` });
