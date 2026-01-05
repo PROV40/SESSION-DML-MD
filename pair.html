@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fee XmdBot Pairing</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #7c3aed;
+      --primary-dark: #5b21b6;
+      --secondary: #06b6d4;
+      --accent: #10b981;
+      --danger: #ef4444;
+      --background: #0f172a;
+      --surface: #1e293b;
+      --surface-light: #334155;
+      --text-primary: #f1f5f9;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+      --gradient-primary: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      --gradient-secondary: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%);
+      --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.4);
+      --shadow-xl: 0 25px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: var(--background);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      color: var(--text-primary);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .tech-background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      overflow: hidden;
+      background: 
+        radial-gradient(circle at 20% 30%, rgba(124, 58, 237, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(6, 182, 212, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
+        linear-gradient(180deg, #0f172a 0%, #0a0f1d 100%);
+    }
+
+    .grid-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(rgba(124, 58, 237, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(124, 58, 237, 0.05) 1px, transparent 1px);
+      background-size: 50px 50px;
+      z-index: -1;
+      opacity: 0.5;
+    }
+
+    .floating-shapes {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+
+    .floating-shape {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(40px);
+      opacity: 0.15;
+      animation: float 20s ease-in-out infinite;
+    }
+
+    .shape-1 {
+      width: 300px;
+      height: 300px;
+      background: var(--primary);
+      top: 10%;
+      left: 10%;
+      animation-delay: 0s;
+    }
+
+    .shape-2 {
+      width: 400px;
+      height: 400px;
+      background: var(--secondary);
+      top: 60%;
+      right: 10%;
+      animation-delay: -5s;
+    }
+
+    .shape-3 {
+      width: 250px;
+      height: 250px;
+      background: var(--accent);
+      bottom: 10%;
+      left: 20%;
+      animation-delay: -10s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-30px) rotate(180deg); }
+    }
+
+    .container {
+      width: 100%;
+      max-width: 500px;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      animation: fadeInUp 0.8s ease-out forwards;
+      will-change: opacity, transform;
+      position: relative;
+      z-index: 2;
+    }
+
+    @keyframes fadeInUp {
+      0% { opacity: 0; transform: translateY(30px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    .dashboard-card {
+      position: relative;
+      background: rgba(30, 41, 59, 0.85);
+      padding: 40px 35px;
+      border-radius: 24px;
+      text-align: center;
+      border: 1px solid rgba(124, 58, 237, 0.3);
+      box-shadow: 
+        var(--shadow-xl),
+        0 0 40px rgba(124, 58, 237, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .dashboard-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--gradient-primary);
+      opacity: 0.1;
+      z-index: -1;
+    }
+
+    .dashboard-card::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(
+        45deg,
+        transparent 30%,
+        rgba(124, 58, 237, 0.1) 50%,
+        transparent 70%
+      );
+      animation: shine 3s infinite linear;
+      z-index: -1;
+    }
+
+    @keyframes shine {
+      0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+      100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+    }
+
+    .dashboard-card:hover {
+      transform: translateY(-8px) scale(1.01);
+      box-shadow: 
+        var(--shadow-xl),
+        0 0 60px rgba(124, 58, 237, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      border-color: rgba(124, 58, 237, 0.5);
+    }
+
+    .card-header {
+      margin-bottom: 30px;
+      position: relative;
+    }
+
+    .bot-avatar {
+      width: 100px;
+      height: 100px;
+      margin: 0 auto 25px;
+      position: relative;
+      animation: avatarFloat 4s ease-in-out infinite;
+    }
+
+    @keyframes avatarFloat {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      33% { transform: translateY(-10px) rotate(3deg); }
+      66% { transform: translateY(-5px) rotate(-3deg); }
+    }
+
+    .avatar-container {
+      width: 100%;
+      height: 100%;
+      background: var(--gradient-primary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow: 
+        0 10px 30px rgba(124, 58, 237, 0.3),
+        0 0 0 4px rgba(124, 58, 237, 0.1),
+        inset 0 0 20px rgba(255, 255, 255, 0.1);
+    }
+
+    .avatar-screen {
+      width: 60px;
+      height: 32px;
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 12px;
+      position: relative;
+      overflow: hidden;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .screen-particles {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+    }
+
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: var(--secondary);
+      border-radius: 50%;
+      animation: particleMove 3s linear infinite;
+    }
+
+    @keyframes particleMove {
+      0% { transform: translateY(32px) translateX(0); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { transform: translateY(0) translateX(30px); opacity: 0; }
+    }
+
+    .card-title {
+      font-size: 32px;
+      font-weight: 800;
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+      position: relative;
+      display: inline-block;
+    }
+
+    .card-title::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 3px;
+      background: var(--gradient-primary);
+      border-radius: 2px;
+      animation: widthPulse 3s infinite alternate;
+    }
+
+    @keyframes widthPulse {
+      0% { width: 100px; }
+      100% { width: 140px; }
+    }
+
+    .card-subtitle {
+      color: var(--text-secondary);
+      font-size: 16px;
+      font-weight: 400;
+      margin-bottom: 35px;
+      max-width: 320px;
+      line-height: 1.5;
+      opacity: 0.9;
+    }
+
+    .input-group {
+      width: 100%;
+      margin-bottom: 30px;
+    }
+
+    .input-label {
+      display: block;
+      text-align: left;
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 10px;
+      padding-left: 5px;
+    }
+
+    .input-wrapper {
+      display: flex;
+      gap: 12px;
+      background: rgba(15, 23, 42, 0.8);
+      padding: 4px;
+      border-radius: 16px;
+      border: 1px solid rgba(124, 58, 237, 0.3);
+      transition: all 0.3s ease;
+      box-shadow: 
+        inset 0 2px 10px rgba(0, 0, 0, 0.2),
+        0 4px 20px rgba(15, 23, 42, 0.5);
+    }
+
+    .input-wrapper:focus-within {
+      border-color: rgba(124, 58, 237, 0.8);
+      box-shadow: 
+        inset 0 2px 10px rgba(0, 0, 0, 0.2),
+        0 0 30px rgba(124, 58, 237, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .phone-input {
+      flex: 1;
+      padding: 18px 20px;
+      border: none;
+      border-radius: 14px;
+      background: rgba(30, 41, 59, 0.9);
+      color: var(--text-primary);
+      font-size: 16px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      font-family: 'Segoe UI', monospace;
+      letter-spacing: 1px;
+    }
+
+    .phone-input::placeholder {
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .phone-input:focus {
+      outline: none;
+      background: rgba(40, 51, 69, 0.9);
+      box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+    }
+
+    .generate-btn {
+      padding: 18px 32px;
+      background: var(--gradient-primary);
+      color: white;
+      border: none;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      white-space: nowrap;
+      box-shadow: 0 8px 20px rgba(124, 58, 237, 0.3);
+    }
+
+    .generate-btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: width 0.6s ease, height 0.6s ease;
+    }
+
+    .generate-btn:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+
+    .generate-btn:hover {
+      background: var(--gradient-secondary);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px rgba(124, 58, 237, 0.4);
+    }
+
+    .generate-btn:active {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(124, 58, 237, 0.3);
+    }
+
+    .result-container {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      min-height: 120px;
+    }
+
+    .loader-container {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      padding: 30px;
+    }
+
+    .modern-loader {
+      width: 60px;
+      height: 60px;
+      position: relative;
+    }
+
+    .loader-ring {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border: 3px solid transparent;
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+
+    .loader-ring:nth-child(2) {
+      border-top-color: var(--secondary);
+      animation-delay: 0.3s;
+      width: 80%;
+      height: 80%;
+      top: 10%;
+      left: 10%;
+    }
+
+    .loader-ring:nth-child(3) {
+      border-top-color: var(--accent);
+      animation-delay: 0.6s;
+      width: 60%;
+      height: 60%;
+      top: 20%;
+      left: 20%;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loader-text {
+      color: var(--text-secondary);
+      font-size: 15px;
+      font-weight: 500;
+      text-align: center;
+      position: relative;
+    }
+
+    .loader-text::after {
+      content: '';
+      animation: loadingDots 1.5s infinite;
+    }
+
+    @keyframes loadingDots {
+      0%, 20% { content: ''; }
+      40% { content: '.'; }
+      60% { content: '..'; }
+      80%, 100% { content: '...'; }
+    }
+
+    .code-display {
+      background: rgba(15, 23, 42, 0.8);
+      border-radius: 16px;
+      padding: 25px;
+      width: 100%;
+      border: 1px solid rgba(124, 58, 237, 0.3);
+      box-shadow: 
+        0 10px 30px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      animation: slideInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes slideInUp {
+      0% { opacity: 0; transform: translateY(20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    .code-label {
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .code-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: 3px;
+      padding: 15px;
+      background: rgba(30, 41, 59, 0.8);
+      border-radius: 12px;
+      margin-bottom: 20px;
+      font-family: 'Courier New', monospace;
+      text-align: center;
+      border: 1px solid rgba(124, 58, 237, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .code-value::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(124, 58, 237, 0.1), transparent);
+      animation: codeShine 3s infinite;
+    }
+
+    @keyframes codeShine {
+      0% { left: -100%; }
+      100% { left: 100%; }
+    }
+
+    .code-highlight {
+      color: var(--secondary);
+      font-weight: 800;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+    }
+
+    .copy-btn {
+      flex: 1;
+      padding: 16px;
+      background: rgba(30, 41, 59, 0.9);
+      color: var(--text-primary);
+      border: 1px solid rgba(124, 58, 237, 0.4);
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .copy-btn:hover {
+      background: rgba(124, 58, 237, 0.1);
+      border-color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(124, 58, 237, 0.2);
+    }
+
+    .copy-btn.copied {
+      background: rgba(16, 185, 129, 0.1);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .copy-btn.copied i {
+      color: var(--accent);
+    }
+
+    .info-message {
+      color: var(--text-secondary);
+      font-size: 13px;
+      margin-top: 25px;
+      padding: 16px;
+      background: rgba(124, 58, 237, 0.05);
+      border-radius: 12px;
+      border-left: 3px solid var(--primary);
+      text-align: left;
+      width: 100%;
+      line-height: 1.5;
+    }
+
+    .info-message i {
+      color: var(--primary);
+      margin-right: 8px;
+    }
+
+    .security-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--accent);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      margin-top: 20px;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    @media (max-width: 520px) {
+      .container {
+        padding: 15px;
+      }
+
+      .dashboard-card {
+        padding: 30px 25px;
+        border-radius: 20px;
+      }
+
+      .bot-avatar {
+        width: 85px;
+        height: 85px;
+      }
+
+      .avatar-screen {
+        width: 50px;
+        height: 28px;
+      }
+
+      .card-title {
+        font-size: 28px;
+      }
+
+      .input-wrapper {
+        flex-direction: column;
+        gap: 8px;
+        padding: 16px;
+      }
+
+      .phone-input,
+      .generate-btn {
+        width: 100%;
+        padding: 16px;
+      }
+
+      .code-value {
+        font-size: 24px;
+        letter-spacing: 2px;
+        padding: 12px;
+      }
+
+      .action-buttons {
+        flex-direction: column;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="tech-background"></div>
+  <div class="grid-overlay"></div>
+  <div class="floating-shapes">
+    <div class="floating-shape shape-1"></div>
+    <div class="floating-shape shape-2"></div>
+    <div class="floating-shape shape-3"></div>
+  </div>
+
+  <div class="container">
+    <div class="dashboard-card">
+      <div class="card-header">
+        <div class="bot-avatar">
+          <div class="avatar-container">
+            <div class="avatar-screen">
+              <div class="screen-particles" id="particles"></div>
+            </div>
+          </div>
+        </div>
+        
+        <h1 class="card-title">FEE XMD BOT</h1>
+        <p class="card-subtitle">Generate secure pairing codes for WhatsApp integration with advanced encryption</p>
+      </div>
+
+      <div class="input-group">
+        <label class="input-label">
+          <i class="fas fa-mobile-alt"></i> WhatsApp Number
+        </label>
+        <div class="input-wrapper">
+          <input 
+            type="tel" 
+            id="number" 
+            class="phone-input"
+            placeholder="2557xxxxxxxx"
+            pattern="[0-9]*"
+            inputmode="numeric"
+            maxlength="12"
+          >
+          <button id="submit" class="generate-btn">
+            <i class="fas fa-bolt"></i> Generate Code
+          </button>
+        </div>
+      </div>
+
+      <div class="loader-container" id="waiting-message">
+        <div class="modern-loader">
+          <div class="loader-ring"></div>
+          <div class="loader-ring"></div>
+          <div class="loader-ring"></div>
+        </div>
+        <div class="loader-text">Securely generating your pairing code</div>
+      </div>
+
+      <main class="result-container" id="pair"></main>
+
+      <div class="info-message">
+        <i class="fas fa-shield-alt"></i>
+        Your pairing code is securely generated using military-grade encryption and will expire in 5 minutes for maximum security.
+      </div>
+
+      <div class="security-badge">
+        <i class="fas fa-lock"></i>
+        <span>End-to-End Encrypted</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.0.0-alpha.1/axios.min.js"></script>
+  <script>
+    let resultContainer = document.getElementById("pair");
+    let submitBtn = document.getElementById("submit");
+    let phoneInput = document.getElementById("number");
+    let waitingMessage = document.getElementById("waiting-message");
+    let particlesContainer = document.getElementById("particles");
+
+    // Create screen particles
+    function createParticles() {
+      particlesContainer.innerHTML = '';
+      for (let i = 0; i < 12; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.cssText = `
+          left: ${Math.random() * 100}%;
+          animation-delay: ${Math.random() * 3}s;
+          animation-duration: ${Math.random() * 2 + 2}s;
+          background: hsl(${Math.random() * 60 + 180}, 100%, 70%);
+        `;
+        particlesContainer.appendChild(particle);
+      }
+    }
+
+    async function copyCode(button) {
+      const codeElement = document.querySelector('.code-highlight');
+      if (!codeElement) return;
+      
+      const text = codeElement.innerText.replace(/\s/g, '');
+      try {
+        await navigator.clipboard.writeText(text);
+        
+        button.classList.add('copied');
+        button.innerHTML = '<i class="fas fa-check"></i> Code Copied!';
+        
+        setTimeout(() => {
+          button.classList.remove('copied');
+          button.innerHTML = '<i class="fas fa-copy"></i> Copy Code';
+        }, 2000);
+      } catch (err) {
+        button.innerHTML = '<i class="fas fa-exclamation"></i> Failed!';
+        setTimeout(() => {
+          button.innerHTML = '<i class="fas fa-copy"></i> Copy Code';
+        }, 2000);
+      }
+    }
+
+    submitBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      
+      // Button click animation
+      submitBtn.style.transform = 'scale(0.95)';
+      setTimeout(() => {
+        submitBtn.style.transform = '';
+      }, 150);
+
+      if (!phoneInput.value) {
+        resultContainer.innerHTML = `
+          <div style="color: var(--danger); font-weight: 600; text-align: center;">
+            <i class="fas fa-exclamation-circle"></i> Please enter your WhatsApp number
+          </div>
+        `;
+        return;
+      }
+
+      const cleanNumber = phoneInput.value.replace(/[^0-9]/g, "");
+      
+      if (cleanNumber.length < 11) {
+        resultContainer.innerHTML = `
+          <div style="color: var(--danger); font-weight: 600; text-align: center;">
+            <i class="fas fa-times-circle"></i> Invalid number format
+          </div>
+        `;
+        return;
+      }
+
+      // Format number display
+      let formattedNumber = "";
+      if (cleanNumber.startsWith("255")) {
+        formattedNumber = `+${cleanNumber}`;
+      } else {
+        formattedNumber = `+255${cleanNumber}`;
+      }
+      
+      phoneInput.value = formattedNumber;
+      phoneInput.style.color = 'var(--accent)';
+      phoneInput.style.fontWeight = '600';
+      
+      // Show loading
+      waitingMessage.style.display = 'flex';
+      resultContainer.innerHTML = '';
+      
+      try {
+        setTimeout(async () => {
+          try {
+            let { data } = await axios(`/code?number=${cleanNumber}`);
+            waitingMessage.style.display = 'none';
+            let code = data.code || "SERVICE_OFFLINE";
+            
+            // Format code with spaces every 4 characters
+            let formattedCode = code.match(/.{1,4}/g).join(' ');
+            
+            resultContainer.innerHTML = `
+              <div class="code-display">
+                <div class="code-label">
+                  <i class="fas fa-key"></i> Your Secure Pairing Code
+                </div>
+                <div class="code-value">
+                  <span class="code-highlight">${formattedCode}</span>
+                </div>
+                <div class="action-buttons">
+                  <button class="copy-btn" onclick="copyCode(this)">
+                    <i class="fas fa-copy"></i> Copy Code
+                  </button>
+                </div>
+                <div style="color: var(--text-muted); font-size: 12px; margin-top: 15px; text-align: center;">
+                  <i class="fas fa-clock"></i> Valid for 5 minutes • <i class="fas fa-sync-alt"></i> One-time use
+                </div>
+              </div>
+            `;
+          } catch (error) {
+            waitingMessage.style.display = 'none';
+            resultContainer.innerHTML = `
+              <div style="color: var(--danger); font-weight: 600; text-align: center;">
+                <i class="fas fa-exclamation-triangle"></i> Network error. Please try again.
+              </div>
+            `;
+          }
+        }, 1500);
+        
+      } catch (error) {
+        waitingMessage.style.display = 'none';
+        resultContainer.innerHTML = `
+          <div style="color: var(--danger); font-weight: 600; text-align: center;">
+            <i class="fas fa-exclamation-triangle"></i> Error generating code
+          </div>
+        `;
+      }
+    });
+
+    // Input focus effects
+    phoneInput.addEventListener("focus", () => {
+      document.querySelector('.input-wrapper').classList.add('focused');
+    });
+
+    phoneInput.addEventListener("blur", () => {
+      document.querySelector('.input-wrapper').classList.remove('focused');
+    });
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', () => {
+      createParticles();
+      
+      // Animate container entrance
+      requestAnimationFrame(() => {
+        document.querySelector('.container').style.opacity = 1;
+      });
+
+      // Auto-format phone number
+      phoneInput.addEventListener('input', (e) => {
+        let value = e.target.value.replace(/[^0-9]/g, '');
+        if (value.startsWith('0')) {
+          value = '255' + value.substring(1);
+        }
+        if (value.length > 12) {
+          value = value.substring(0, 12);
+        }
+        phoneInput.value = value;
+      });
+    });
+  </script>
+</body>
+</html>
