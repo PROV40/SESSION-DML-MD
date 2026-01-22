@@ -9,15 +9,14 @@ const {
     useMultiFileAuthState,
     delay,
     makeCacheableSignalKeyStore,
-    Browsers,
     fetchLatestBaileysVersion,
 } = require('@whiskeysockets/baileys');
 
 const router = express.Router();
 const sessionDir = path.join(__dirname, "temp");
 
-function removeFile(path) {
-    if (fs.existsSync(path)) fs.rmSync(path, { recursive: true, force: true });
+function removeFile(dir) {
+    if (fs.existsSync(dir)) fs.rmSync(dir, { recursive: true, force: true });
 }
 
 router.get('/', async (req, res) => {
@@ -31,8 +30,8 @@ router.get('/', async (req, res) => {
         if (!sessionCleanedUp) {
             try {
                 removeFile(tempDir);
-            } catch (cleanupError) {
-                console.error("Cleanup error:", cleanupError);
+            } catch (e) {
+                console.error("Cleanup error:", e);
             }
             sessionCleanedUp = true;
         }
@@ -45,99 +44,64 @@ router.get('/', async (req, res) => {
 
             const sock = Fredi({
                 version,
-                logger: pino({ level: 'fatal' }).child({ level: 'fatal' }),
+                logger: pino({ level: 'fatal' }),
                 printQRInTerminal: false,
                 auth: {
                     creds: state.creds,
-                    keys: makeCacheableSignalKeyStore(state.keys, pino({ level: 'fatal' }).child({ level: 'fatal' })),
+                    keys: makeCacheableSignalKeyStore(
+                        state.keys,
+                        pino({ level: 'fatal' })
+                    ),
                 },
                 browser: ["Ubuntu", "Chrome", "125"],
-                syncFullHistory: false,
-                generateHighQualityLinkPreview: true,
-                shouldIgnoreJid: jid => !!jid?.endsWith('@g.us'),
-                getMessage: async () => undefined,
                 markOnlineOnConnect: true,
                 connectTimeoutMs: 120000,
-                keepAliveIntervalMs: 30000,
-                emitOwnEvents: true,
-                fireInitQueries: true,
-                defaultQueryTimeoutMs: 60000,
-                transactionOpts: {
-                    maxCommitRetries: 10,
-                    delayBetweenTriesMs: 3000
-                },
-                retryRequestDelayMs: 10000
+                keepAliveIntervalMs: 30000
             });
 
-            // === Pairing Code Generation ===  
+            sock.ev.on('creds.update', saveCreds);
+
+            // === Pairing Code ===
             if (!sock.authState.creds.registered) {
-                await delay(2000); 
+                await delay(2000);
                 const code = await sock.requestPairingCode(num);
                 if (!responseSent && !res.headersSent) {
-                    res.json({ code: code });
+                    res.json({ code });
                     responseSent = true;
                 }
             }
 
-            sock.ev.on('creds.update', saveCreds);
-
-            sock.ev.on('connection.update', async (update) => {
-                const { connection, lastDisconnect } = update;
-
+            sock.ev.on('connection.update', async ({ connection, lastDisconnect }) => {
                 if (connection === 'open') {
-                    console.log('✅ Dml-md successfully connected to WhatsApp.');
-                    
+                    console.log('✅ Connected to WhatsApp');
 
-                    try {
-                        await sock.sendMessage(sock.user.id, {
-                            text: `
-
-╭────── DML-MD ──────╮
-│ ❒ Connected! 👋 
-│ ❒ Generating Session ID... 
-│ ❒ Please wait... ⏳ 
-╰────────────────────╯
-
-`,
-                        });
-                    } catch (msgError) {
-                        console.log("Welcome message skipped, continuing...");
-                    }
+                    await sock.sendMessage(sock.user.id, {
+                        text: `╭────── DML-MD ──────╮
+│ Connected! 👋
+│ Generating Session...
+╰────────────────────╯`
+                    });
 
                     await delay(15000);
 
                     const credsPath = path.join(tempDir, "creds.json");
-
-
                     let sessionData = null;
-                    let attempts = 0;
-                    const maxAttempts = 10;
 
-                    while (attempts < maxAttempts && !sessionData) {
-                        try {
-                            if (fs.existsSync(credsPath)) {
-                                const data = fs.readFileSync(credsPath);
-                                if (data && data.length > 50) {
-                                    sessionData = data;
-                                    break;
-                                }
+                    for (let i = 0; i < 10; i++) {
+                        if (fs.existsSync(credsPath)) {
+                            const data = fs.readFileSync(credsPath);
+                            if (data.length > 50) {
+                                sessionData = data;
+                                break;
                             }
-                            await delay(4000);
-                            attempts++;
-                        } catch (readError) {
-                            console.error("Read attempt error:", readError);
-                            await delay(2000);
-                            attempts++;
                         }
+                        await delay(4000);
                     }
 
                     if (!sessionData) {
-                        console.error("Failed to read session data");
-                        try {
-                            await sock.sendMessage(sock.user.id, {
-                                text: "Failed to generate session. Please try again."
-                            });
-                        } catch (e) {}
+                        await sock.sendMessage(sock.user.id, {
+                            text: "❌ Failed to generate session. Try again."
+                        });
                         await cleanUpSession();
                         sock.ws.close();
                         return;
@@ -145,95 +109,95 @@ router.get('/', async (req, res) => {
 
                     const base64 = Buffer.from(sessionData).toString('base64');
 
+                    // 1️⃣ SEND CTA COPY (BEST UX)
                     try {
-                        const sentSession = await sock.sendMessage(sock.user.id, {
-                            text: base64
+                        await sock.sendMessage(sock.user.id, {
+                            viewOnceMessage: {
+                                message: {
+                                    interactiveMessage: {
+                                        header: {
+                                            title: "DML-MD SESSION"
+                                        },
+                                        body: {
+                                            text: "Copy your session below 👇"
+                                        },
+                                        footer: {
+                                            text: "Powered by DML"
+                                        },
+                                        nativeFlowMessage: {
+                                            buttons: [
+                                                {
+                                                    name: "cta_copy",
+                                                    buttonParamsJson: JSON.stringify({
+                                                        display_text: "Copy Session",
+                                                        copy_code: base64
+                                                    })
+                                                },
+                                                {
+                                                    name: "cta_url",
+                                                    buttonParamsJson: JSON.stringify({
+                                                        display_text: "Visit Bot Repo",
+                                                        url: "https://github.com/MLILA17/DML-MD"
+                                                    })
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
                         });
-
-                        const infoMessage = `  
-YOUR SESSION IS SUCCESSFULLY GENERATED L! ✅ ✨
-
-💪 Empowering Your Experience with Dml Tech
-
-👥 Connect & Chat with Friends
-👉 Join Free https://whatsapp.com/channel/0029VbBf4Y52kNFkFCx2pF1H
-
-🌟 Support Our Work
-⭐ Give our repo a star & follow the developer here ⤵
-🔗 GitHub – https://github.com/MLILA17
-
-💭 Need Help or Updates?
-📢 Join our official support channel:
-WhatsApp Channel
-
-📚 Learn & Explore with Tutorials
-🪄 Check out our YouTube channel:
-https://www.youtube.com/@DaudyMussa-h1r
-
-🚀 Powered by Dml. Together, we build the future of automation! 🚀`;
-
-                        await sock.sendMessage(sock.user.id, { text: infoMessage }, { quoted: sentSession });
-
-                        await delay(2000);
-                        sock.ws.close();
-                        await cleanUpSession();
-
-                    } catch (sendError) {
-                        console.error("Error sending session:", sendError);
-                        await cleanUpSession();
-                        sock.ws.close();
+                    } catch (e) {
+                        console.log("⚠️ CTA message blocked by WhatsApp");
                     }
 
-                } else if (connection === "close") {
+                    // ⏳ CRITICAL DELAY — allows WhatsApp to render CTA
+                    await delay(3000);
+
+                    // 2️⃣ FALLBACK (ALWAYS DELIVERED)
+                    const sentSession = await sock.sendMessage(sock.user.id, {
+                        text: base64
+                    });
+
+                    const infoMessage = `
+✅ SESSION GENERATED SUCCESSFULLY!
+
+⭐ GitHub: https://github.com/MLILA17
+.
+.
+🚀 Powered by Dml
+`;
+
+                    await sock.sendMessage(
+                        sock.user.id,
+                        { text: infoMessage },
+                        { quoted: sentSession }
+                    );
+
+                    await delay(2000);
+                    sock.ws.close();
+                    await cleanUpSession();
+
+                } else if (connection === 'close') {
                     if (lastDisconnect?.error?.output?.statusCode !== 401) {
-                        console.log('⚠️ Connection closed, attempting to reconnect...');
+                        console.log('Reconnecting...');
                         await delay(10000);
                         startPairing();
                     } else {
-                        console.log('❌ Connection closed permanently');
                         await cleanUpSession();
                     }
-                } else if (connection === "connecting") {
-                    console.log('⏳ Connecting to WhatsApp...');
-                }
-            });
-
-            // Handle errors
-            sock.ev.on('connection.update', (update) => {
-                if (update.qr) {
-                    console.log("QR code received");
-                }
-                if (update.connection === "close") {
-                    console.log("Connection closed event");
                 }
             });
 
         } catch (err) {
-            console.error('❌ Error during pairing:', err);
+            console.error("❌ Pairing error:", err);
             await cleanUpSession();
             if (!responseSent && !res.headersSent) {
-                res.status(500).json({ code: 'Service Unavailable. Please try again.' });
-                responseSent = true;
+                res.status(500).json({ code: "Service Error" });
             }
         }
     }
 
-
-    const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => {
-            reject(new Error("Pairing process timeout"));
-        }, 180000);
-    });
-
-    try {
-        await Promise.race([startPairing(), timeoutPromise]);
-    } catch (finalError) {
-        console.error("Final error:", finalError);
-        await cleanUpSession();
-        if (!responseSent && !res.headersSent) {
-            res.status(500).json({ code: "Service Error - Timeout" });
-        }
-    }
+    startPairing();
 });
 
 module.exports = router;
