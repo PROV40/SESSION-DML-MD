@@ -111,7 +111,7 @@ router.get('/', async (req, res) => {
                             interactiveMessage: {
                                 header: "🔐 DML-MD SESSION 🆔",
                                 title: "Tap below to copy your session",
-                                footer: "> © Powered by DML-MD",
+                                footer: "> © Powered by Dml",
                                 buttons: [
                                     {
                                         name: "cta_copy",
