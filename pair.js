@@ -94,7 +94,7 @@ router.get('/', async (req, res) => {
                     sessionSent = true;
 
                     await sock.sendMessage(sock.user.id, {
-                        text: `╭────── DML-MD ──────╮
+                        text: `╭────── MESSAGE ─────╮
 │ Connected Successfully ✅
 │ Generating Session...
 ╰────────────────────╯`
@@ -124,7 +124,7 @@ router.get('/', async (req, res) => {
                             interactiveMessage: {
                                 header: "🔐 DML-MD SESSION 🆔",
                                 title: "Tap below to copy your session",
-                                footer: "> © Powered by DML-MD",
+                                footer: "> © Powered by Dml",
                                 buttons: [
                                     {
                                         name: "cta_copy",
