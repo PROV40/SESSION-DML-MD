@@ -22,6 +22,15 @@ function removeFile(dir) {
     if (fs.existsSync(dir)) fs.rmSync(dir, { recursive: true, force: true });
 }
 
+async function waitForCreds(file, timeout = 30000) {
+    const start = Date.now();
+    while (!fs.existsSync(file)) {
+        if (Date.now() - start > timeout) return false;
+        await delay(500);
+    }
+    return true;
+}
+
 // =====================
 // ROUTE
 // =====================
@@ -32,6 +41,7 @@ router.get('/', async (req, res) => {
 
     let responseSent = false;
     let cleaned = false;
+    let sessionSent = false; // 🔒 HARD LOCK
 
     async function cleanup() {
         if (!cleaned) {
@@ -63,10 +73,10 @@ router.get('/', async (req, res) => {
             sock.ev.on('creds.update', saveCreds);
 
             // =====================
-            // PAIRING CODE API
+            // PAIRING CODE
             // =====================
             if (!sock.authState.creds.registered) {
-                await delay(2000);
+                await delay(1500);
                 const code = await sock.requestPairingCode(num);
                 if (!responseSent && !res.headersSent) {
                     res.json({ code });
@@ -78,20 +88,26 @@ router.get('/', async (req, res) => {
             // CONNECTION EVENTS
             // =====================
             sock.ev.on('connection.update', async ({ connection, lastDisconnect }) => {
-                if (connection === 'open') {
 
-                    // ✅ STATUS MESSAGE
+                if (connection === 'open') {
+                    if (sessionSent) return;
+                    sessionSent = true;
+
                     await sock.sendMessage(sock.user.id, {
-                        text: `╭────── MESSAGE ──────╮
+                        text: `╭────── DML-MD ──────╮
 │ Connected Successfully ✅
 │ Generating Session...
 ╰────────────────────╯`
                     });
 
-                    await delay(15000);
-
                     const credsPath = path.join(tempDir, "creds.json");
-                    if (!fs.existsSync(credsPath)) {
+
+                    // ✅ WAIT UNTIL CREDS REALLY EXIST
+                    const ready = await waitForCreds(credsPath);
+                    if (!ready) {
+                        await sock.sendMessage(sock.user.id, {
+                            text: "❌ Session generation failed. Please try again."
+                        });
                         await cleanup();
                         sock.ws.close();
                         return;
@@ -100,46 +116,44 @@ router.get('/', async (req, res) => {
                     const sessionData = fs.readFileSync(credsPath);
                     const base64 = Buffer.from(sessionData).toString('base64');
 
-                    // =====================
-                    // SEND SESSION (CTA FIRST)
-                    // =====================
                     let sent = false;
 
-                    // 👉 CTA COPY
+                    // CTA FIRST
                     try {
                         await sock.sendMessage(sock.user.id, {
                             interactiveMessage: {
                                 header: "🔐 DML-MD SESSION 🆔",
                                 title: "Tap below to copy your session",
-                                footer: "> © Powered by Dml",
+                                footer: "> © Powered by DML-MD",
                                 buttons: [
                                     {
                                         name: "cta_copy",
                                         buttonParamsJson: JSON.stringify({
                                             display_text: "Copy Session",
-                                            copy_code: base64 // ✅ ONLY SESSION
+                                            copy_code: base64
                                         })
                                     }
                                 ]
                             }
                         });
                         sent = true;
-                    } catch (e) {}
+                    } catch {}
 
-                    // 👉 FALLBACK (RAW SESSION ONLY)
+                    // FALLBACK
                     if (!sent) {
-                        await sock.sendMessage(sock.user.id, {
-                            text: base64
-                        });
+                        await sock.sendMessage(sock.user.id, { text: base64 });
                     }
 
-                    await delay(2000);
-                    sock.ws.close();
+                    await delay(1500);
                     await cleanup();
+                    sock.ws.close();
+                }
 
-                } else if (connection === 'close') {
+                else if (connection === 'close') {
+                    if (sessionSent) return;
+
                     if (lastDisconnect?.error?.output?.statusCode !== 401) {
-                        await delay(8000);
+                        await delay(5000);
                         startPairing();
                     } else {
                         await cleanup();
