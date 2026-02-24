@@ -92,11 +92,13 @@ router.get('/', async (req, res) => {
                         await sock.sendMessage(sock.user.id, {
                             text: `
 
-╭────── MESSAGE ──────╮
-│ ❒ Connected! 👋 
-│ ❒ Generating Session ID... 
-│ ❒ Please wait... ⏳ 
-╰────────────────────╯
+╭━━〔 🤖 DML CONSOLE 〕━━╮`,
+`┃`,
+`┃  🟢  Connected Successfully`,
+`┃  🔐  Generating Session ID...`,
+`┃  ⏳  Please wait a moment`,
+`┃`,
+`╰━━━━━━━━━━━━━━━━━━━━━╯
 
 `,
                         });
