@@ -53,11 +53,13 @@ router.get('/', async (req, res) => {
                 if (qr) await res.end(await QRCode.toBuffer(qr));
                 if (connection === 'open') {
                     await Qr_Code_By_Fredi.sendMessage(Qr_Code_By_Fredi.user.id, { text: `
-╭────── DML-MD ──────╮
-│ ❒ Connected! 👋 
-│ ❒ Generating Session ID... 
-│ ❒ Please wait... ⏳ 
-╰────────────────────╯
+╭━━〔 🤖 DML MESSAGE 〕━━╮`,
+`┃`,
+`┃  🟢  Connected Successfully`,
+`┃  🔐  Generating Session ID...`,
+`┃  ⏳  Please wait a moment`,
+`┃`,
+`╰━━━━━━━━━━━━━━━━━━━━━╯
 
 ` });
                     await delay(5000);
