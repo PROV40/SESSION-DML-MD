@@ -41,7 +41,7 @@ router.get('/', async (req, res) => {
                 },
                 printQRInTerminal: false,
                 logger: pino({ level: 'silent' }).child({ level: 'silent' }),
-                browser: ['Ubuntu', 'Chrome'],
+                browser: ['Ubuntu', 'Chrome', "20.0.04"],
                 syncFullHistory: false,
                 connectTimeoutMs: 60000,
                 keepAliveIntervalMs: 30000
